@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen">
+
+    <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-lg text-center">
+        <h1 class="text-2xl font-bold mb-4">🎥 YouTube Video Downloader</h1>
+        <input type="text" id="videoURL" 
+               class="w-full p-3 text-black rounded-lg mb-4 border-none outline-none" 
+               placeholder="Enter YouTube URL">
+        <button onclick="fetchFormats()" 
+                class="w-full bg-red-600 hover:bg-red-700 transition text-white py-3 rounded-lg font-bold">
+            🔽 Get Video
+        </button>
+        <div id="result" class="mt-6"></div>
+    </div>
+
+    <script>
+        function fetchFormats() {
+    let url = document.getElementById("videoURL").value;
+
+    if (!url.trim()) {
+        alert("Please enter a valid YouTube URL");
+        return;
+    }
+
+    fetch('http://localhost:3000/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+    })
+    .then(response => response.json())
+    .then(data => {
+        let resultDiv = document.getElementById("result");
+
+        if (data.error) {
+            resultDiv.innerHTML = `<p class="text-red-500 font-semibold">${data.error}</p>`;
+        } else {
+            resultDiv.innerHTML = `
+                <p class="text-lg font-semibold">${data.title}</p>
+                <a href="${data.downloadUrl}" class="text-blue-500 underline font-bold mt-4" download>
+                    📥 Click to Download
+                </a>
+            `;
+        }
+    })
+    .catch(error => {
+        console.log("Error fetching data:", error);
+    });
+}
+
+
+    </script>
+
+</body>
+</html>
