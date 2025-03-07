@@ -22,36 +22,37 @@
 
     <script>
         function downloadVideo() {
-            let url = document.getElementById("videoURL").value;
+    let url = document.getElementById("videoURL").value;
 
-            if (!url.trim()) {
-                alert("Please enter a valid YouTube URL");
-                return;
-            }
+    if (!url.trim()) {
+        alert("Please enter a valid YouTube URL");
+        return;
+    }
 
-            fetch("http://localhost:4000/download", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url })
-            })
-            .then(response => response.json())
-            .then(data => {
-                let resultDiv = document.getElementById("result");
+    fetch("http://localhost:4000/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+    })
+    .then(response => response.json())
+    .then(data => {
+        let resultDiv = document.getElementById("result");
 
-                if (data.error) {
-                    resultDiv.innerHTML = `<p class="text-red-500 font-semibold">${data.error}</p>`;
-                } else {
-                    resultDiv.innerHTML = `
-                        <a href="${data.downloadUrl}" class="text-blue-500 underline font-bold mt-4" download>
-                            📥 Click to Download
-                        </a>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.log("Error downloading video:", error);
-            });
+        if (data.error) {
+            resultDiv.innerHTML = `<p class="text-red-500 font-semibold">${data.error}</p>`;
+        } else {
+            resultDiv.innerHTML = `
+                <a href="${data.downloadUrl}" class="text-blue-500 underline font-bold mt-4">
+                    📥 Click to Download
+                </a>
+            `;
         }
+    })
+    .catch(error => {
+        console.log("Error downloading video:", error);
+    });
+}
+
     </script>
 
 </body>
