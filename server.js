@@ -4,28 +4,57 @@ const path = require("path");
 const { exec } = require("child_process");
 
 const app = express();
-const PORT = 3000;
+const PORT = 4000;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.post("/download", (req, res) => {
+// ✅ Route to fetch available formats
+app.post("/formats", (req, res) => {
     const { url } = req.body;
 
     if (!url) {
         return res.status(400).json({ error: "No URL provided" });
     }
 
-    // Set output filename
-    const outputFilePath = path.join(__dirname, "public", "video.mp4");
+    // Fetch available formats using yt-dlp
+    exec(`yt-dlp -F ${url}`, (error, stdout, stderr) => {
+        if (error) {
+            return res.status(500).json({ error: "Error fetching formats", details: stderr });
+        }
 
-    // Execute yt-dlp to download the video
-    exec(`yt-dlp -f best -o "${outputFilePath}" ${url}`, (error, stdout, stderr) => {
+        // Extract format list from stdout
+        const formats = stdout.split("\n").filter(line => line.match(/^\d+/)).map(line => {
+            const parts = line.trim().split(/\s+/);
+            return {
+                format_id: parts[0],
+                extension: parts[1],
+                resolution: parts.slice(2).join(" ")
+            };
+        });
+
+        res.json({ formats });
+    });
+});
+
+// ✅ Route to download selected format
+app.post("/download", (req, res) => {
+    const { url, format } = req.body;
+
+    if (!url || !format) {
+        return res.status(400).json({ error: "URL or format missing" });
+    }
+
+    // Set output filename
+    const outputFilePath = path.join(__dirname, "public", `downloaded_video.${format}`);
+
+    // Execute yt-dlp to download the selected format
+    exec(`yt-dlp -f ${format} -o "${outputFilePath}" ${url}`, (error, stdout, stderr) => {
         if (error) {
             return res.status(500).json({ error: "Error downloading video", details: stderr });
         }
-        res.json({ title: "Download Ready", downloadUrl: "/video.mp4" });
+        res.json({ title: "Download Ready", downloadUrl: `/downloaded_video.${format}` });
     });
 });
 

@@ -21,7 +21,7 @@
     </div>
 
     <script>
-        function fetchFormats() {
+       function fetchFormats() {
     let url = document.getElementById("videoURL").value;
 
     if (!url.trim()) {
@@ -29,9 +29,9 @@
         return;
     }
 
-    fetch('http://localhost:3000/download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    fetch("http://localhost:3000/formats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url })
     })
     .then(response => response.json())
@@ -41,11 +41,19 @@
         if (data.error) {
             resultDiv.innerHTML = `<p class="text-red-500 font-semibold">${data.error}</p>`;
         } else {
+            let formatOptions = data.formats.map(format => `
+                <option value="${format.format_id}">${format.extension.toUpperCase()} - ${format.resolution}</option>
+            `).join("");
+
             resultDiv.innerHTML = `
-                <p class="text-lg font-semibold">${data.title}</p>
-                <a href="${data.downloadUrl}" class="text-blue-500 underline font-bold mt-4" download>
-                    📥 Click to Download
-                </a>
+                <p class="text-lg font-semibold">Select format:</p>
+                <select id="formatSelect" class="w-full p-3 text-black rounded-lg mb-4 border-none outline-none">
+                    ${formatOptions}
+                </select>
+                <button onclick="downloadVideo('${url}')" 
+                        class="w-full bg-green-600 hover:bg-green-700 transition text-white py-3 rounded-lg font-bold">
+                    📥 Download
+                </button>
             `;
         }
     })
@@ -53,6 +61,35 @@
         console.log("Error fetching data:", error);
     });
 }
+
+function downloadVideo(url) {
+    let selectedFormat = document.getElementById("formatSelect").value;
+
+    fetch("http://localhost:3000/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, format: selectedFormat })
+    })
+    .then(response => response.json())
+    .then(data => {
+        let resultDiv = document.getElementById("result");
+
+        if (data.error) {
+            resultDiv.innerHTML += `<p class="text-red-500 font-semibold">${data.error}</p>`;
+        } else {
+            resultDiv.innerHTML += `
+                <a href="${data.downloadUrl}" class="text-blue-500 underline font-bold mt-4" download>
+                    📥 Click to Download
+                </a>
+            `;
+        }
+    })
+    .catch(error => {
+        console.log("Error downloading video:", error);
+    });
+}
+ 
+
 
 
     </script>
