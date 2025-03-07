@@ -13,15 +13,15 @@
         <input type="text" id="videoURL" 
                class="w-full p-3 text-black rounded-lg mb-4 border-none outline-none" 
                placeholder="Enter YouTube URL">
-        <button onclick="fetchFormats()" 
+        <button onclick="downloadVideo()" 
                 class="w-full bg-red-600 hover:bg-red-700 transition text-white py-3 rounded-lg font-bold">
-            🔽 Get Video
+            🔽 Download Video
         </button>
         <div id="result" class="mt-6"></div>
     </div>
 
     <script>
-       function fetchFormats() {
+        function downloadVideo() {
             let url = document.getElementById("videoURL").value;
 
             if (!url.trim()) {
@@ -29,7 +29,7 @@
                 return;
             }
 
-            fetch("http://localhost:4000/formats", {
+            fetch("http://localhost:4000/download", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ url })
@@ -41,59 +41,11 @@
                 if (data.error) {
                     resultDiv.innerHTML = `<p class="text-red-500 font-semibold">${data.error}</p>`;
                 } else {
-                    let formatOptions = data.formats.map(format => `
-                        <option value="${format.format_id}">${format.extension.toUpperCase()} - ${format.resolution}</option>
-                    `).join("");
-
                     resultDiv.innerHTML = `
-                        <p class="text-lg font-semibold">Select format:</p>
-                        <select id="formatSelect" class="w-full p-3 text-black rounded-lg mb-4 border-none outline-none">
-                            ${formatOptions}
-                        </select>
-                        <button onclick="downloadVideo('${url}')" 
-                                class="w-full bg-green-600 hover:bg-green-700 transition text-white py-3 rounded-lg font-bold">
-                            📥 Download
-                        </button>
+                        <a href="${data.downloadUrl}" class="text-blue-500 underline font-bold mt-4" download>
+                            📥 Click to Download
+                        </a>
                     `;
-                }
-            })
-            .catch(error => {
-                console.log("Error fetching data:", error);
-            });
-        }
-
-        function downloadVideo(url) {
-            let selectedFormat = document.getElementById("formatSelect").value;
-
-            fetch("http://localhost:4000/download", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url, format: selectedFormat })
-            })
-            .then(response => response.json())
-            .then(data => {
-                let resultDiv = document.getElementById("result");
-
-                if (data.error) {
-                    resultDiv.innerHTML += `<p class="text-red-500 font-semibold">${data.error}</p>`;
-                } else {
-                    if (data.videoUrl && data.audioUrl) {
-                        resultDiv.innerHTML += `
-                            <p class="text-yellow-400 font-bold mt-2">⚠️ Video and audio need to be merged manually.</p>
-                            <a href="${data.videoUrl}" class="text-blue-500 underline font-bold mt-4" download>
-                                📽️ Download Video
-                            </a>
-                            <a href="${data.audioUrl}" class="text-blue-500 underline font-bold mt-4" download>
-                                🎵 Download Audio
-                            </a>
-                        `;
-                    } else {
-                        resultDiv.innerHTML += `
-                            <a href="${data.downloadUrl}" class="text-blue-500 underline font-bold mt-4" download>
-                                📥 Click to Download
-                            </a>
-                        `;
-                    }
                 }
             })
             .catch(error => {
